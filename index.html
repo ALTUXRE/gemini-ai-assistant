@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Gemini AI Assistant</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; max-width: 700px; }
+        textarea, select, input[type=text] { width: 100%; margin-top: 6px; margin-bottom: 12px; padding: 8px; box-sizing: border-box; }
+        .error { color: red; }
+        .response-box { background: #f8f8f8; padding: 15px; border: 1px solid #ccc; white-space: pre-wrap; }
+        .feedback { margin-top: 20px; }
+    </style>
+    <script>
+        const PROMPTS = {
+            'answer': [
+                "What is the capital of France?",
+                "Explain the significance of the Eiffel Tower.",
+                "Tell me three facts about Paris."
+            ],
+            'summarize': [
+                "Summarize the following article:\n[text]",
+                "What are the main points of this text?\n[text]",
+                "Provide a brief overview of this document:\n[text]"
+            ],
+            'creative': [
+                "Write a short story about a dragon and a princess.",
+                "Create a poem about autumn.",
+                "Generate an idea for a science fiction novel."
+            ]
+        };
+
+        function updatePromptStyles() {
+            const fnSelect = document.getElementById('function');
+            const promptSelect = document.getElementById('prompt_style');
+            const textInputDiv = document.getElementById('text_input_div');
+            const customPrompt = document.getElementById('custom_prompt');
+            const fn = fnSelect.value;
+            promptSelect.innerHTML = '';
+            customPrompt.value = '';
+            if (!fn || !(fn in PROMPTS)) {
+                promptSelect.disabled = true;
+                textInputDiv.style.display = 'none';
+                customPrompt.disabled = true;
+                return;
+            }
+            promptSelect.disabled = false;
+            PROMPTS[fn].forEach((p, idx) => {
+                const option = document.createElement('option');
+                option.value = idx + 1;
+                option.textContent = p.replace('[text]', '[Your text here]');
+                promptSelect.appendChild(option);
+            });
+            const customOption = document.createElement('option');
+            customOption.value = 'custom';
+            customOption.textContent = 'Enter custom prompt';
+            promptSelect.appendChild(customOption);
+            textInputDiv.style.display = 'none';
+            customPrompt.disabled = true;
+        }
+        function checkPromptStyle() {
+            const promptSelect = document.getElementById('prompt_style');
+            const textInputDiv = document.getElementById('text_input_div');
+            const customPrompt = document.getElementById('custom_prompt');
+            if (!promptSelect.value) {
+                textInputDiv.style.display = 'none';
+                customPrompt.disabled = true;
+                return;
+            }
+            if (promptSelect.value === 'custom') {
+                textInputDiv.style.display = 'none';
+                customPrompt.disabled = false;
+                customPrompt.focus();
+            } else {
+                customPrompt.value = '';
+                customPrompt.disabled = true;
+                const selectedText = promptSelect.options[promptSelect.selectedIndex].text;
+                if (selectedText.includes('[Your text here]')) {
+                    textInputDiv.style.display = 'block';
+                } else {
+                    textInputDiv.style.display = 'none';
+                }
+            }
+        }
+        window.onload = () => {
+            const fnVal = "{{ function|default('') }}";
+            const psVal = "{{ prompt_style|default('') }}";
+            if(fnVal) {
+                document.getElementById('function').value = fnVal;
+                updatePromptStyles();
+            }
+            if(psVal) {
+                document.getElementById('prompt_style').value = psVal;
+                checkPromptStyle();
+            }
+            checkPromptStyle();
+        }
+    </script>
+</head>
+<body>
+<h1>Gemini AI Assistant</h1>
+{% if error %}
+    <p class="error">{{ error }}</p>
+{% endif %}
+{% if feedback_given %}
+    <p><strong>Thank you for your feedback!</strong></p>
+{% endif %}
+<form method="post" action="/">
+    <label for="function">Select function:</label>
+    <select name="function" id="function" onchange="updatePromptStyles()" required>
+        <option value="" disabled selected>Select function</option>
+        <option value="answer" {% if function == 'answer' %}selected{% endif %}>Answer Questions</option>
+        <option value="summarize" {% if function == 'summarize' %}selected{% endif %}>Summarize Text</option>
+        <option value="creative" {% if function == 'creative' %}selected{% endif %}>Generate Creative Content</option>
+    </select>
+    <label for="prompt_style">Select prompt style:</label>
+    <select id="prompt_style" name="prompt_style" onchange="checkPromptStyle()" required>
+        <option value="" disabled selected>Select prompt style</option>
+    </select>
+    <div id="text_input_div" style="display:none;">
+        <label for="text_input">Enter text for prompt:</label>
+        <textarea name="text_input" id="text_input"></textarea>
+    </div>
+    <label for="custom_prompt">Or enter your custom prompt:</label>
+    <textarea name="custom_prompt" id="custom_prompt" disabled></textarea>
+    <button type="submit">Get Response</button>
+</form>
+{% if response %}
+    <div class="response-box">
+        <h3>Response:</h3>
+        <p>{{ response }}</p>
+    </div>
+    {% if show_feedback_form %}
+        <div class="feedback">
+            <form method="post" action="/">
+                <p>Was this response helpful?</p>
+                <input type="radio" id="yes" name="feedback" value="yes" required>
+                <label for="yes">Yes</label>
+                <input type="radio" id="no" name="feedback" value="no" required>
+                <label for="no">No</label>
+                <input type="hidden" name="fn" value="{{ function }}" />
+                <input type="hidden" name="prompt_for_feedback" value="{{ prompt }}" />
+                <input type="hidden" name="response_for_feedback" value="{{ response }}" />
+                <br>
+                <button type="submit">Submit Feedback</button>
+            </form>
+        </div>
+    {% endif %}
+{% endif %}
+</body>
+</html>
