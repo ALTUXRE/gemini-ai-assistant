@@ -12,17 +12,6 @@ Includes a feedback mechanism to collect user inputs for continuous prompt impro
 - Integration with Google Gemini API (free tier)
 - Feedback collection and saving in a local log file (`feedback_log.txt`)
 
-## Project Structure
-
-gemini-flask-ai-assistant/
-├── app.py # Flask server code
-├── requirements.txt # Required Python packages
-├── feedback_log.txt # Stores user feedback (created after first use)
-└── templates/
-└── index.html # HTML template for the UI
-
-text
-
 ## Setup and Run Locally
 
 1. Clone this repository:
